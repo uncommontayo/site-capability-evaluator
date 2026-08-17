@@ -1,0 +1,50 @@
+{
+  "_note": "GRADED CONTRACT vs ILLUSTRATIVE. The deterministic part — the set of present `must`/`should` features and the full `requiredCapabilities` rollup (capabilityId, minLevel, criticality, sourceFeatureIds) — is what your output is checked against. `confidence`/`evidence` strings and the exact archetype confidence are LLM-dependent and only illustrative; they are graded with tolerance, not for an exact match. Capability and feature lists are unordered.",
+
+  "catalogVersion": "2026-01-15T00:00:00Z",
+  "archetype": { "id": "ecommerce", "confidence": 0.85 },
+
+  "inferredFeatures": [
+    { "featureId": "public-no-login", "present": true, "criticality": "must",
+      "confidence": 0.85, "evidence": "homepage + search page browse products with no login wall." },
+    { "featureId": "has-search", "present": true, "criticality": "should",
+      "confidence": 0.9, "evidence": "'Search products' on homepage; dedicated search-results page." },
+    { "featureId": "has-simple-forms", "present": true, "criticality": "must",
+      "confidence": 0.85, "evidence": "checkout shipping form has name/address/city/postcode text inputs." },
+    { "featureId": "has-multistep-forms", "present": true, "criticality": "must",
+      "confidence": 0.9, "evidence": "checkout page: 'Step 1 of 2: Shipping' then 'Step 2 of 2: Payment'." },
+    { "featureId": "has-payment-forms", "present": true, "criticality": "must",
+      "confidence": 0.92, "evidence": "checkout: card number/expiry/CVC, 'powered by Stripe'." },
+    { "featureId": "uses-iframes", "present": true, "criticality": "must",
+      "confidence": 0.7, "evidence": "Stripe payment fields are typically rendered in a cross-origin iframe (inferred)." }
+  ],
+
+  "requiredCapabilities": [
+    { "capabilityId": "unauth-explore", "minLevel": 2, "criticality": "must",
+      "sourceFeatureIds": ["public-no-login"] },
+    { "capabilityId": "page-load", "minLevel": 2, "criticality": "must",
+      "sourceFeatureIds": ["public-no-login"] },
+    { "capabilityId": "text-input", "minLevel": 3, "criticality": "must",
+      "sourceFeatureIds": ["has-search", "has-payment-forms", "has-simple-forms"] },
+    { "capabilityId": "dom-mutation", "minLevel": 2, "criticality": "should",
+      "sourceFeatureIds": ["has-search", "has-multistep-forms"] },
+    { "capabilityId": "iframe-traversal", "minLevel": 2, "criticality": "must",
+      "sourceFeatureIds": ["has-payment-forms", "uses-iframes"] },
+    { "capabilityId": "multistep-forms", "minLevel": 2, "criticality": "must",
+      "sourceFeatureIds": ["has-multistep-forms"] },
+    { "capabilityId": "form-validation", "minLevel": 2, "criticality": "should",
+      "sourceFeatureIds": ["has-multistep-forms"] }
+  ],
+
+  "investigation": {
+    "mode": "passed-in",
+    "accessOutcome": "public-only",
+    "pagesUsed": 3
+  },
+
+  "_walkthrough": {
+    "text-input": "This is the case to get right. has-payment-forms requires text-input @3 but only as a `should`; has-search and has-simple-forms require it @2 as a `must`. minLevel and criticality are rolled up INDEPENDENTLY: level = max(2,3,2) = 3; criticality = strictest(should, must, must) = must. Result: text-input @3 (must). A naive 'take everything from the strictest feature' shortcut gets this wrong.",
+    "iframe-traversal": "Required by both uses-iframes and has-payment-forms at @2(must); sourceFeatureIds lists both.",
+    "not-present": "email-password-login, sso-login, is-spa, behind-bot-protection should be present:false (no supporting evidence in the captured pages)."
+  }
+}

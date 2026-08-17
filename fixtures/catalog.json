@@ -1,0 +1,299 @@
+{
+  "version": "2026-01-15T00:00:00Z",
+  "featureClusters": [
+    { "id": "access", "name": "Access & Auth" },
+    { "id": "architecture", "name": "App Architecture" },
+    { "id": "forms", "name": "Forms & Input" }
+  ],
+  "features": [
+    {
+      "id": "public-no-login",
+      "name": "Publicly reachable",
+      "question": "Can the surfaces worth testing be reached without logging in?",
+      "clusterId": "access",
+      "requires": [
+        { "capabilityId": "unauth-explore", "minLevel": 2, "criticality": "must" },
+        { "capabilityId": "page-load", "minLevel": 2, "criticality": "must" }
+      ]
+    },
+    {
+      "id": "email-password-login",
+      "name": "Email / password login",
+      "question": "Do users sign in with an email and a password?",
+      "clusterId": "access",
+      "requires": [
+        { "capabilityId": "password-login", "minLevel": 2, "criticality": "must" },
+        { "capabilityId": "text-input", "minLevel": 2, "criticality": "must" },
+        { "capabilityId": "form-validation", "minLevel": 1, "criticality": "should" }
+      ]
+    },
+    {
+      "id": "sso-login",
+      "name": "Social / SSO login",
+      "question": "Can users sign in via Google, GitHub, Microsoft, or a corporate identity provider?",
+      "clusterId": "access",
+      "requires": [
+        { "capabilityId": "sso-login", "minLevel": 2, "criticality": "must" },
+        { "capabilityId": "popup-windows", "minLevel": 2, "criticality": "must" },
+        { "capabilityId": "session-reuse", "minLevel": 1, "criticality": "should" }
+      ]
+    },
+    {
+      "id": "behind-bot-protection",
+      "name": "Bot / WAF protection",
+      "question": "Is the product fronted by Cloudflare, Akamai, DataDome, or a similar bot/WAF service?",
+      "clusterId": "access",
+      "requires": [
+        { "capabilityId": "bot-handling", "minLevel": 2, "criticality": "must" },
+        { "capabilityId": "page-load", "minLevel": 3, "criticality": "must" }
+      ]
+    },
+    {
+      "id": "is-spa",
+      "name": "Single-page app",
+      "question": "Is the product a single-page app where navigation often happens without a full page reload?",
+      "clusterId": "architecture",
+      "requires": [
+        { "capabilityId": "spa-state", "minLevel": 2, "criticality": "must" },
+        { "capabilityId": "dom-mutation", "minLevel": 2, "criticality": "should" }
+      ]
+    },
+    {
+      "id": "uses-iframes",
+      "name": "Embedded iframes",
+      "question": "Does the product embed third-party content in iframes (payment widgets, OAuth, embedded analytics, video)?",
+      "clusterId": "architecture",
+      "requires": [
+        { "capabilityId": "iframe-traversal", "minLevel": 2, "criticality": "must" }
+      ]
+    },
+    {
+      "id": "has-simple-forms",
+      "name": "Simple forms",
+      "question": "Does the product have basic text, email, or phone input fields users fill out?",
+      "clusterId": "forms",
+      "requires": [
+        { "capabilityId": "text-input", "minLevel": 2, "criticality": "must" }
+      ]
+    },
+    {
+      "id": "has-multistep-forms",
+      "name": "Multi-step forms",
+      "question": "Does the product have multi-step wizards, conditional fields, or checkout flows that span multiple pages?",
+      "clusterId": "forms",
+      "requires": [
+        { "capabilityId": "multistep-forms", "minLevel": 2, "criticality": "must" },
+        { "capabilityId": "form-validation", "minLevel": 2, "criticality": "should" },
+        { "capabilityId": "dom-mutation", "minLevel": 2, "criticality": "should" }
+      ]
+    },
+    {
+      "id": "has-payment-forms",
+      "name": "Payment capture",
+      "question": "Does the product collect card details, typically via a Stripe, Adyen, or Braintree iframe?",
+      "clusterId": "forms",
+      "requires": [
+        { "capabilityId": "iframe-traversal", "minLevel": 2, "criticality": "must" },
+        { "capabilityId": "text-input", "minLevel": 3, "criticality": "should" }
+      ]
+    },
+    {
+      "id": "has-search",
+      "name": "Search-driven UI",
+      "question": "Is typing into a search box the primary way users find records or content?",
+      "clusterId": "forms",
+      "requires": [
+        { "capabilityId": "text-input", "minLevel": 2, "criticality": "must" },
+        { "capabilityId": "dom-mutation", "minLevel": 1, "criticality": "should" }
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "page-load",
+      "name": "Standard Page Loading",
+      "description": "Load a target URL reliably and recognise when the page is ready.",
+      "areaId": "access-security",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Loads a static page over HTTP and detects DOMContentLoaded." },
+        { "level": 2, "text": "Waits for network-idle and basic client rendering before acting." },
+        { "level": 3, "text": "Survives challenge interstitials, redirects, and slow hydration." }
+      ]
+    },
+    {
+      "id": "unauth-explore",
+      "name": "Unauthenticated Exploration",
+      "description": "Explore public surfaces without any credentials.",
+      "areaId": "access-security",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Visits a single known public URL." },
+        { "level": 2, "text": "Follows in-domain links to discover public surfaces." },
+        { "level": 3, "text": "Prioritises high-value public surfaces under a crawl budget." }
+      ]
+    },
+    {
+      "id": "password-login",
+      "name": "Email / Password Login",
+      "description": "Authenticate using an email and password form.",
+      "areaId": "access-security",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Submits a username/password form on a happy path." },
+        { "level": 2, "text": "Handles 'forgot password' decoys, remember-me, and post-login redirects." },
+        { "level": 3, "text": "Recovers from interstitial consent screens and step-up prompts." }
+      ]
+    },
+    {
+      "id": "sso-login",
+      "name": "OAuth / SSO Login",
+      "description": "Authenticate via a third-party or federated identity provider.",
+      "areaId": "access-security",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Completes a single-provider OAuth happy path." },
+        { "level": 2, "text": "Handles provider chooser screens and consent dialogs." },
+        { "level": 3, "text": "Handles enterprise IdP redirects and SCIM-provisioned tenants." }
+      ]
+    },
+    {
+      "id": "session-reuse",
+      "name": "Session Persistence & Reuse",
+      "description": "Authenticate once and reuse the session across runs.",
+      "areaId": "access-security",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Persists cookies within a single run." },
+        { "level": 2, "text": "Stores and restores a session across runs." },
+        { "level": 3, "text": "Detects expired sessions and silently re-authenticates." }
+      ]
+    },
+    {
+      "id": "bot-handling",
+      "name": "Bot / WAF Handling",
+      "description": "Reach products fronted by bot-detection or WAF services.",
+      "areaId": "access-security",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Passes trivial user-agent checks." },
+        { "level": 2, "text": "Reaches products behind common managed bot/WAF rules." },
+        { "level": 3, "text": "Sustains long sessions behind aggressive fingerprinting." }
+      ]
+    },
+    {
+      "id": "spa-state",
+      "name": "SPA State Detection",
+      "description": "Recognise meaningful state changes that do not change the URL.",
+      "areaId": "exploration-action",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Detects route changes that update the URL." },
+        { "level": 2, "text": "Detects client-side view changes with no URL change." },
+        { "level": 3, "text": "Distinguishes meaningful state from cosmetic re-renders." }
+      ]
+    },
+    {
+      "id": "dom-mutation",
+      "name": "Live DOM Mutation Tracking",
+      "description": "Track asynchronous DOM changes after an action.",
+      "areaId": "exploration-action",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Notices content that appears synchronously after a click." },
+        { "level": 2, "text": "Waits for async/XHR-driven content and settles before acting." },
+        { "level": 3, "text": "Tracks streaming/continuous mutation without thrashing." }
+      ]
+    },
+    {
+      "id": "iframe-traversal",
+      "name": "Iframe Traversal",
+      "description": "Interact with content rendered inside iframes.",
+      "areaId": "exploration-action",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Reads content from a same-origin iframe." },
+        { "level": 2, "text": "Drives input inside a cross-origin provider iframe (e.g. Stripe)." },
+        { "level": 3, "text": "Coordinates flows that span the host page and multiple iframes." }
+      ]
+    },
+    {
+      "id": "popup-windows",
+      "name": "Multi-tab / Popup Handling",
+      "description": "Follow flows that open a new tab or popup window.",
+      "areaId": "exploration-action",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Detects that a popup opened." },
+        { "level": 2, "text": "Switches into a popup, acts, and returns to the opener." },
+        { "level": 3, "text": "Coordinates state across opener and multiple child windows." }
+      ]
+    },
+    {
+      "id": "text-input",
+      "name": "Text & Realistic Data Input",
+      "description": "Enter text and realistic data into form fields.",
+      "areaId": "exploration-action",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Types literal strings into plain inputs." },
+        { "level": 2, "text": "Enters context-appropriate values (emails, names, phone numbers)." },
+        { "level": 3, "text": "Generates data that passes strict server-side / format validation." }
+      ]
+    },
+    {
+      "id": "form-validation",
+      "name": "Validation-Aware Filling",
+      "description": "React to inline validation errors while filling a form.",
+      "areaId": "exploration-action",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Submits a form and notices a validation error occurred." },
+        { "level": 2, "text": "Reads inline errors and corrects the offending field." },
+        { "level": 3, "text": "Resolves interdependent / cross-field validation rules." }
+      ]
+    },
+    {
+      "id": "multistep-forms",
+      "name": "Multi-Step / Conditional Form Flows",
+      "description": "Drive a form that spans multiple steps or pages to completion.",
+      "areaId": "exploration-action",
+      "acceptanceCriteria": [
+        { "level": 1, "text": "Completes a 2-step form on a happy path." },
+        { "level": 2, "text": "Handles back/next, conditional steps, and re-entry." },
+        { "level": 3, "text": "Recovers from validation errors and dynamic step insertion." }
+      ]
+    }
+  ],
+  "investmentAreas": [
+    { "id": "access-security", "name": "Access & Security", "layer": "foundation" },
+    { "id": "exploration-action", "name": "Exploration & Action", "layer": "capability" }
+  ],
+  "archetypes": [
+    {
+      "id": "marketing-site",
+      "name": "Marketing Website",
+      "description": "Public, mostly server-rendered site with light forms and no auth wall.",
+      "features": [
+        { "featureId": "public-no-login", "criticality": "must" },
+        { "featureId": "has-simple-forms", "criticality": "nice" },
+        { "featureId": "has-search", "criticality": "nice" }
+      ]
+    },
+    {
+      "id": "saas-app",
+      "name": "SaaS Application",
+      "description": "Authenticated single-page web app with forms and wizards behind a login.",
+      "features": [
+        { "featureId": "email-password-login", "criticality": "must" },
+        { "featureId": "sso-login", "criticality": "should" },
+        { "featureId": "is-spa", "criticality": "must" },
+        { "featureId": "has-simple-forms", "criticality": "must" },
+        { "featureId": "has-multistep-forms", "criticality": "should" },
+        { "featureId": "has-search", "criticality": "should" }
+      ]
+    },
+    {
+      "id": "ecommerce",
+      "name": "E-commerce",
+      "description": "Public storefront with search, multi-step checkout, and embedded payment.",
+      "features": [
+        { "featureId": "public-no-login", "criticality": "must" },
+        { "featureId": "has-search", "criticality": "should" },
+        { "featureId": "has-simple-forms", "criticality": "must" },
+        { "featureId": "has-multistep-forms", "criticality": "must" },
+        { "featureId": "has-payment-forms", "criticality": "must" },
+        { "featureId": "uses-iframes", "criticality": "must" },
+        { "featureId": "email-password-login", "criticality": "should" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "pagesFingerprint": "9a7ccd803499a0ee",
+  "features": [
+    { "featureId": "public-no-login", "present": true, "confidence": 0.85,
+      "evidence": "homepage + search page browse products with no login wall." },
+    { "featureId": "has-search", "present": true, "confidence": 0.9,
+      "evidence": "'Search products' on homepage; dedicated search-results page." },
+    { "featureId": "has-simple-forms", "present": true, "confidence": 0.85,
+      "evidence": "checkout shipping form has name/address/city/postcode text inputs." },
+    { "featureId": "has-multistep-forms", "present": true, "confidence": 0.9,
+      "evidence": "checkout page: 'Step 1 of 2: Shipping' then 'Step 2 of 2: Payment'." },
+    { "featureId": "has-payment-forms", "present": true, "confidence": 0.92,
+      "evidence": "checkout: card number/expiry/CVC, 'powered by Stripe'." },
+    { "featureId": "uses-iframes", "present": true, "confidence": 0.7,
+      "evidence": "Stripe payment fields are typically rendered in a cross-origin iframe (inferred)." },
+    { "featureId": "email-password-login", "present": false, "confidence": 0.1, "evidence": "no login/account form captured on any page." },
+    { "featureId": "sso-login", "present": false, "confidence": 0.1, "evidence": "no OAuth/SSO provider mentioned on any captured page." },
+    { "featureId": "is-spa", "present": false, "confidence": 0.2, "evidence": "no explicit evidence of client-side routing in the captured text." },
+    { "featureId": "behind-bot-protection", "present": false, "confidence": 0.1, "evidence": "no evidence of a bot/WAF challenge in the captured pages." }
+  ]
+}

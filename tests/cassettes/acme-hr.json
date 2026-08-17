@@ -1,0 +1,18 @@
+{
+  "pagesFingerprint": "1d07c4e8f584408e",
+  "features": [
+    { "featureId": "email-password-login", "present": true, "confidence": 0.95,
+      "evidence": "login page (sourceType=login): 'Email address' + 'Password' fields." },
+    { "featureId": "has-multistep-forms", "present": true, "confidence": 0.9,
+      "evidence": "signup page (sourceType=signup): 'Step 1 of 3', steps 2 and 3 named." },
+    { "featureId": "has-simple-forms", "present": true, "confidence": 0.85,
+      "evidence": "login + signup pages contain text/email input fields." },
+    { "featureId": "sso-login", "present": false, "confidence": 0.1, "evidence": "no OAuth/SSO provider mentioned on any captured page." },
+    { "featureId": "is-spa", "present": false, "confidence": 0.15, "evidence": "no evidence of client-side routing; only marketing/login/signup pages captured." },
+    { "featureId": "public-no-login", "present": false, "confidence": 0.1, "evidence": "site requires login for the product; captured pages are gated by a login wall." },
+    { "featureId": "uses-iframes", "present": false, "confidence": 0.1, "evidence": "no iframe or embedded third-party widget mentioned." },
+    { "featureId": "has-payment-forms", "present": false, "confidence": 0.1, "evidence": "no card/payment fields mentioned on any captured page." },
+    { "featureId": "has-search", "present": false, "confidence": 0.15, "evidence": "no search box mentioned on any captured page." },
+    { "featureId": "behind-bot-protection", "present": false, "confidence": 0.1, "evidence": "no evidence of a bot/WAF challenge in the captured pages." }
+  ]
+}

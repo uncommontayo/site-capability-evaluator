@@ -1,0 +1,27 @@
+{
+  "site": { "domain": "acme-hr.example", "name": "Acme HR", "archetypeHint": "saas-app" },
+  "content": {
+    "pages": [
+      {
+        "url": "https://acme-hr.example",
+        "sourceType": "marketing",
+        "title": "Acme HR",
+        "text": "Acme HR — the all-in-one HR platform for growing teams. Log in to your dashboard, or request a demo. Manage people, payroll, and time off in one place."
+      },
+      {
+        "url": "https://acme-hr.example/login",
+        "sourceType": "login",
+        "title": "Sign in — Acme HR",
+        "text": "Sign in to Acme HR. Email address. Password. Forgot your password? Don't have an account? Create one."
+      },
+      {
+        "url": "https://acme-hr.example/signup",
+        "sourceType": "signup",
+        "title": "Create your account — Acme HR",
+        "text": "Create your account — Step 1 of 3: Company details. Company name. Number of employees. Continue. (Next: Step 2 — Admin user, Step 3 — Billing.)"
+      }
+    ]
+  },
+  "catalogVersion": "2026-01-15T00:00:00Z",
+  "options": { "liveCrawl": { "enabled": false } }
+}

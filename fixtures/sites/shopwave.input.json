@@ -1,0 +1,27 @@
+{
+  "site": { "domain": "shopwave.example", "name": "ShopWave" },
+  "content": {
+    "pages": [
+      {
+        "url": "https://shopwave.example",
+        "sourceType": "marketing",
+        "title": "ShopWave — shop thousands of products",
+        "text": "ShopWave. Shop thousands of products with free shipping. Search products. Browse categories: Electronics, Home, Outdoors. New arrivals. Add to cart."
+      },
+      {
+        "url": "https://shopwave.example/search?q=headphones",
+        "sourceType": "app",
+        "title": "Search results — ShopWave",
+        "text": "Search results for 'headphones'. Filter by brand, price, rating. 248 results. Add to cart. Load more results as you scroll."
+      },
+      {
+        "url": "https://shopwave.example/checkout",
+        "sourceType": "app",
+        "title": "Checkout — ShopWave",
+        "text": "Checkout. Step 1 of 2: Shipping address. Full name, address, city, postcode. Continue to payment. Step 2 of 2: Payment. Pay securely with card. Card number, expiry, CVC. (Payment fields powered by Stripe.)"
+      }
+    ]
+  },
+  "catalogVersion": "2026-01-15T00:00:00Z",
+  "options": { "liveCrawl": { "enabled": false } }
+}

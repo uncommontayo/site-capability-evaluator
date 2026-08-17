@@ -1,0 +1,40 @@
+{
+  "_note": "GRADED CONTRACT vs ILLUSTRATIVE. The deterministic part — the set of present `must`/`should` features and the full `requiredCapabilities` rollup (capabilityId, minLevel, criticality, sourceFeatureIds) — is what your output is checked against. `confidence`/`evidence` strings and the exact archetype confidence are LLM-dependent and only illustrative; they are graded with tolerance, not for an exact match. Capability and feature lists are unordered.",
+
+  "catalogVersion": "2026-01-15T00:00:00Z",
+  "archetype": { "id": "saas-app", "confidence": 0.8 },
+
+  "inferredFeatures": [
+    { "featureId": "email-password-login", "present": true, "criticality": "must",
+      "confidence": 0.95, "evidence": "login page (sourceType=login): 'Email address' + 'Password' fields." },
+    { "featureId": "has-multistep-forms", "present": true, "criticality": "should",
+      "confidence": 0.9, "evidence": "signup page (sourceType=signup): 'Step 1 of 3', steps 2 and 3 named." },
+    { "featureId": "has-simple-forms", "present": true, "criticality": "must",
+      "confidence": 0.85, "evidence": "login + signup pages contain text/email input fields." }
+  ],
+
+  "requiredCapabilities": [
+    { "capabilityId": "password-login", "minLevel": 2, "criticality": "must",
+      "sourceFeatureIds": ["email-password-login"] },
+    { "capabilityId": "text-input", "minLevel": 2, "criticality": "must",
+      "sourceFeatureIds": ["email-password-login", "has-simple-forms"] },
+    { "capabilityId": "form-validation", "minLevel": 2, "criticality": "should",
+      "sourceFeatureIds": ["email-password-login", "has-multistep-forms"] },
+    { "capabilityId": "multistep-forms", "minLevel": 2, "criticality": "must",
+      "sourceFeatureIds": ["has-multistep-forms"] },
+    { "capabilityId": "dom-mutation", "minLevel": 2, "criticality": "should",
+      "sourceFeatureIds": ["has-multistep-forms"] }
+  ],
+
+  "investigation": {
+    "mode": "passed-in",
+    "accessOutcome": "public-only",
+    "pagesUsed": 3
+  },
+
+  "_walkthrough": {
+    "form-validation": "email-password-login requires it @1(should); has-multistep-forms requires it @2(should). Level = max(1,2) = 2. Criticality = strictest(should, should) = should.",
+    "text-input": "email-password-login @2(must) and has-simple-forms @2(must) both contribute. Level = max(2,2) = 2. Criticality = must.",
+    "not-present": "sso-login, is-spa, public-no-login, uses-iframes, has-payment-forms, has-search, behind-bot-protection should be present:false (the product is gated and these have no supporting evidence)."
+  }
+}

@@ -1,0 +1,325 @@
+openapi: 3.1.0
+info:
+  title: Site Capability Evaluator
+  version: "0.1.0"
+  description: >
+    Given evidence about a customer's site (captured pages, or a live domain),
+    answers exactly one question: which capabilities would our agent need, and
+    at what minimum level, to test this site? Never reads or reasons about the
+    agent's current capability levels, and never computes a readiness/fit score.
+servers:
+  - url: http://localhost:8080
+    description: local dev
+
+paths:
+  /v1/evaluate:
+    post:
+      summary: Evaluate what a site requires
+      operationId: evaluate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluateRequest"
+      responses:
+        "200":
+          description: >
+            Evaluation succeeded. Note a gated/inaccessible site is still a 200 -
+            see investigation.accessOutcome, not an error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluateResponse"
+        "400":
+          description: Malformed request (no evidence provided, or an unknown pinned catalogVersion).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Request validation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+        "502":
+          description: The Catalog API was unreachable and no cached copy is available.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /health:
+    get:
+      summary: Liveness check
+      operationId: health
+      responses:
+        "200":
+          description: Service is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { status: { type: string, example: ok } }
+
+  /version:
+    get:
+      summary: Build/version identifier
+      operationId: version
+      responses:
+        "200":
+          description: The running evaluator version.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { evaluatorVersion: { type: string } }
+
+  /internal/guardrail-metrics:
+    get:
+      summary: LLM response validation metrics (not for production auth/scope - see README)
+      operationId: guardrailMetrics
+      responses:
+        "200":
+          description: Snapshot of how often the LLM boundary validation layer caught, retried, or fell back on a malformed model response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cluster_calls: { type: integer }
+                  validation_failures: { type: integer }
+                  validation_failure_rate: { type: number }
+                  retry_successes: { type: integer }
+                  fallback_used: { type: integer }
+                  mean_confidence: { type: number }
+
+components:
+  schemas:
+    Criticality:
+      type: string
+      enum: [must, should, nice]
+    Level:
+      type: integer
+      enum: [0, 1, 2, 3]
+    SourceType:
+      type: string
+      enum: [app, marketing, pricing, docs, login, signup, external, other]
+    AccessOutcome:
+      type: string
+      enum: [authenticated, public-only, partial, blocked]
+    InvestigationMode:
+      type: string
+      enum: [live, passed-in, mixed]
+
+    Page:
+      type: object
+      required: [url, sourceType]
+      properties:
+        url: { type: string, format: uri }
+        sourceType: { $ref: "#/components/schemas/SourceType" }
+        text: { type: [string, "null"], description: "Extracted readable text - the preferred input." }
+        html: { type: [string, "null"] }
+        title: { type: [string, "null"] }
+        httpStatus: { type: [integer, "null"] }
+        notes: { type: [string, "null"] }
+
+    EvaluateContent:
+      type: object
+      properties:
+        pages:
+          type: array
+          items: { $ref: "#/components/schemas/Page" }
+        extraSignals:
+          type: [object, "null"]
+          additionalProperties: true
+
+    Credentials:
+      type: object
+      properties:
+        username: { type: [string, "null"] }
+        password: { type: [string, "null"] }
+        secrets: { type: [object, "null"], additionalProperties: { type: string } }
+
+    SessionCookie:
+      type: object
+      required: [name, value, domain]
+      properties:
+        name: { type: string }
+        value: { type: string }
+        domain: { type: string }
+
+    EvaluateAccess:
+      type: object
+      description: >
+        Everything in this object is a SECRET. Never logged, persisted, cached,
+        or echoed in trace/responses; dropped from memory at the end of the request.
+      properties:
+        loginUrl: { type: [string, "null"], format: uri }
+        credentials:
+          anyOf:
+            - $ref: "#/components/schemas/Credentials"
+            - type: "null"
+        sessionCookies:
+          type: [array, "null"]
+          items: { $ref: "#/components/schemas/SessionCookie" }
+        notes: { type: [string, "null"] }
+
+    LiveCrawlOptions:
+      type: object
+      properties:
+        enabled: { type: [boolean, "null"], default: false }
+        maxPages: { type: [integer, "null"] }
+        timeBudgetMs: { type: [integer, "null"] }
+
+    EvaluateOptions:
+      type: object
+      properties:
+        liveCrawl:
+          anyOf:
+            - $ref: "#/components/schemas/LiveCrawlOptions"
+            - type: "null"
+        model: { type: [string, "null"] }
+
+    SiteRef:
+      type: object
+      required: [domain]
+      properties:
+        domain: { type: string }
+        name: { type: [string, "null"] }
+        archetypeHint: { type: [string, "null"] }
+
+    EvaluateRequest:
+      type: object
+      required: [site]
+      properties:
+        site: { $ref: "#/components/schemas/SiteRef" }
+        content:
+          anyOf:
+            - $ref: "#/components/schemas/EvaluateContent"
+            - type: "null"
+          description: "PASS-IN MODE. If present, evaluation works ONLY from these pages - no fetching."
+        access:
+          anyOf:
+            - $ref: "#/components/schemas/EvaluateAccess"
+            - type: "null"
+        options:
+          anyOf:
+            - $ref: "#/components/schemas/EvaluateOptions"
+            - type: "null"
+        catalogVersion:
+          type: [string, "null"]
+          description: "Pin a version; omit for latest (the response echoes what was actually used)."
+
+    ArchetypeResult:
+      type: object
+      required: [id, confidence]
+      properties:
+        id: { type: string }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+
+    InferredFeature:
+      type: object
+      required: [featureId, present, criticality, confidence, evidence]
+      properties:
+        featureId: { type: string }
+        present: { type: boolean }
+        criticality: { $ref: "#/components/schemas/Criticality" }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        evidence: { type: string }
+
+    RequiredCapability:
+      type: object
+      required: [capabilityId, minLevel, criticality, confidence, sourceFeatureIds, reasoning]
+      properties:
+        capabilityId: { type: string }
+        minLevel: { $ref: "#/components/schemas/Level" }
+        criticality: { $ref: "#/components/schemas/Criticality" }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        sourceFeatureIds:
+          type: array
+          items: { type: string }
+        reasoning: { type: string }
+
+    EvidenceSource:
+      type: object
+      required: [type, used]
+      properties:
+        type: { type: string }
+        url: { type: [string, "null"], format: uri }
+        used: { type: boolean }
+        note: { type: [string, "null"] }
+
+    Investigation:
+      type: object
+      required: [mode, accessOutcome, pagesUsed]
+      properties:
+        mode: { $ref: "#/components/schemas/InvestigationMode" }
+        accessOutcome: { $ref: "#/components/schemas/AccessOutcome" }
+        evidenceSources:
+          type: array
+          items: { $ref: "#/components/schemas/EvidenceSource" }
+        pagesUsed: { type: integer }
+
+    EvaluateResponse:
+      type: object
+      required:
+        - catalogVersion
+        - evaluatorVersion
+        - archetype
+        - inferredFeatures
+        - requiredCapabilities
+        - overallConfidence
+        - investigation
+      properties:
+        catalogVersion: { type: string }
+        evaluatorVersion: { type: string }
+        archetype: { $ref: "#/components/schemas/ArchetypeResult" }
+        inferredFeatures:
+          type: array
+          items: { $ref: "#/components/schemas/InferredFeature" }
+        requiredCapabilities:
+          type: array
+          items: { $ref: "#/components/schemas/RequiredCapability" }
+        overallConfidence: { type: number, minimum: 0, maximum: 1 }
+        investigation: { $ref: "#/components/schemas/Investigation" }
+        trace:
+          type: [object, "null"]
+          additionalProperties: true
+          description: >
+            Optional debug info. MUST NOT contain credentials/cookies. Populated
+            with a `liveCrawl` object (pagesFetched, robotsBlockedCount, maxPages,
+            timeBudgetMs) whenever live or mixed mode actually ran a crawl; null
+            for pass-in mode, where there's nothing to trace beyond what
+            `investigation` already reports.
+
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          enum: [no_evidence, unknown_catalog_version, catalog_unavailable]
+        message: { type: string }
+        detail: { type: [object, "null"], additionalProperties: true }
+
+    HTTPValidationError:
+      type: object
+      properties:
+        detail:
+          type: array
+          items: { $ref: "#/components/schemas/ValidationError" }
+
+    ValidationError:
+      type: object
+      required: [loc, msg, type]
+      properties:
+        loc:
+          type: array
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+        msg: { type: string }
+        type: { type: string }
